@@ -1,24 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>DRIVER - Drought and Rain Investigation through Visual and Environmental Representations</title>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRIVER - SEES 2017</title>
+    <link rel="stylesheet" type="text/css" href="fonts/fonts.min.css" />
     <script   src="http://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css"
           integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw=="
           crossorigin=""/>
-    <link rel="stylesheet" href="mapStyle.css">
     <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"
             integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA=="
             crossorigin=""></script>
     <script src="https://unpkg.com/esri-leaflet@2.0.4/dist/esri-leaflet.js"></script>
+    <link rel="stylesheet" href="mapStyle.css">
     <link rel="shortcut icon" type="image/gif" href="csrlogo.gif">
 </head>
 <body>
 <div id="mapid"></div>
-<div id="centerButton">
-    <img src="center%20button.png" alt="Center Map" height="42" width="42" onclick="moveToCurrLoc()">
+<div id="splash" class="wrapper" style='position:absolute;width:450px;height:300px;top:0;right:0;bottom:0;left:0;margin:auto;'>
+    <p style='font-size: 22px;text-decoration: underline;text-align: center'>Welcome to DRIVER (Drought and Rain Investigation through Visual and Environmental Representations)!</p>
+    <p style='text-align: center'>Through this application, both current and forecasted precipitation patterns can be viewed over depictions of areas suffering from varying levels of drought in order to ascertain and predict the trajectory of drought conditions across the United States. Enjoy!</p>
+    <br><br>
+    <button class='button' style='font-size: 30px;position:absolute;top:78%;left: 50%;transform: translate(-50%, -50%);' onClick="clearHTML('splash')">Click here to begin</button>
 </div>
+
+<div id="spinner" class="loader hide"></div>
+
+<div id="centerButton" style='cursor:pointer;'>
+    <img src="center%20button.png" alt="Center Map" height="44" width="44" onclick="moveToCurrLoc()">
+</div>
+
+<div class="wrapper popup hide" style="position:fixed;left:57px;bottom:18px">Zoom to your current location with this button. However, some browsers block this feature.</div>
+<div class="wrapper popup hide" style="position:fixed;right:55px;top:11.5px">Drought and preciptiation layers and view options can be adjusted from this menu.<br><ul><li>By enabling the drought layer and the current precipitation layer, <br>near-term drought alleviation and flood risk can be evaluated.</li><li>By enabling the drought layer and the forecast precipitation layer, predictions regarding<br> future occurence of floods and the alleviation of drought conditions can be derived.</li><li>Opacity of each layer can be adjusted to better view underlying layers.</li><li>Basemap, selected state, and exact coordinates can be set for any use case.</li><li>Click on the forecast layer to view each individual polygon's quantitative precipitation forecast.</li></ul></div>
 
 <div id="mySidenav" class="sidenav">
     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
@@ -94,14 +107,16 @@
                 <option>Wyoming</option>
             </select>
             <br>View Specific Location:<br>
-            <button class="button" onclick="ask()">Input Coordinates</button>
-            <br>Set Drought Layer Opacity<br>
-            <input id="droughtOpacity" type="range" value="50" onchange="setDroughtOpacity()">
+            <button class="button" onclick="inputCoordinates()">Input Coordinates</button>
+            <br>Set Current Precipitation Layer Opacity<br>
+            <input id="radarOpacity" type="range" value="50" onchange="setRadarOpacity()">
             <br>Set Forecast Layer Opacity<br>
             <input id="forecastOpacity" type="range" value="50" onchange="setForecastOpacity()">
+            <br>Set Drought Layer Opacity<br>
+            <input id="droughtOpacity" type="range" value="50" onchange="setDroughtOpacity()">
         </div>
         <br>
-        <div class="wrapper" style="position:relative;top:270px;width:240px;">
+        <div class="wrapper" style="position:relative;top:310px;width:240px;">
             <h3>Layer Selection</h3>
             <!--Toggle National Hourly Precipitation
             <label class="switch" for="toggleHrlyPrecip">
@@ -115,27 +130,34 @@
                 <span class="slider round"></span>
             </label>
             <br>
-            Toggle 7-Day Forecast
+            Toggle 7-Day Precipitation Forecast
             <label class="switch">
                 <input type="checkbox" id="toggleForecast" onclick="toggleForecast()">
                 <span class="slider round"></span>
             </label>
             <br>
-            Toggle National Drought Conditions
+            Toggle Drought Conditions
             <label class="switch">
                 <input type="checkbox" id="toggleDrought">
                 <span class="slider round"></span>
             </label>
         </div>
     </div>
+    <div id='name' class='hide' style="position:fixed;color: white;bottom:15px;right:1px;box-sizing: border-box;">
+    <span>Created by Alessandro Loia</span>
+    </div>
 </div>
 
 <div id="forecastLegend" style="bottom:62px;left:10px;"></div>
+<div id="radarLegend" style="bottom:62px;left:85px;"></div>
+<div id="droughtLegend" style="bottom: 62px; left: 165px;"></div>
 
-<div id="droughtLegend" style="top: 83px; left: 10px;"></div>
+<div id="menu" class="wrapper uiButton" style="background-color: #eaeaea;top:10px;right:10px;padding:2px 9px 5px;box-sizing: border-box;border-radius:500px;box-shadow: 0 0.3px 0.3px 0.3px #95959f;cursor:pointer;user-select:none;" onclick="openNav()">
+    <span style="font-size:23px;color:#181818">&#9776;</span>
+</div>
 
-<div class="wrapper" style="top:10px;right:10px;">
-    <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776;</span>
+<div class="wrapper uiButton" style="background-color: #EAEAEA;width:39px;height:39px;top:55px;right:10px;padding:7px 8px 5px 14px;box-sizing: border-box;border-radius:501px;box-shadow: 0 0.3px 0.3px 0.3px #95959f;cursor:pointer;user-select:none;" onclick="togglePopups()">
+    <span style="font-size:23px;color:#181818">?</span>
 </div>
 
 <script src="mapInit.js"></script>
