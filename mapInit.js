@@ -1,4 +1,8 @@
 //GLOBAL VARIABLES INSTANTIATION/INITIALIZATION
+//Trigger Splash Screen
+$(document).ready(splash);
+
+var loader = $("#spinner");
 var queryLayer;
 var latitude;
 var longitude;
@@ -81,15 +85,16 @@ var droughtMap = L.tileLayer.wms('http://ndmc-001.unl.edu:8080/cgi-bin/mapserv.e
     attribution: "NDMC, USDA, NOAA"
 });
 
-
 //EVENT FUNCTIONS
 function queryPrecipitation() {
+    loader.toggleClass("hide");
     var conditions;
     var state = document.getElementById("state").value;
     if(state !== "Select State") {
             conditions = "STATE = '" + state + "'";
         } else {
         queryLayer.clearLayers();
+        loader.toggleClass("hide");
         return;
     }
 
@@ -105,17 +110,9 @@ function queryPrecipitation() {
             query.where(conditions);
             query.run(function (error, latLngBounds, response) {
                 //console.log(latLngBounds);
-                queryLayer = L.geoJson(latLngBounds, {
-                    pointToLayer: function (feature, latlng) {
-                        return L.circleMarker(latlng, geojsonMarkerOptions);
-
-
-                    }/*,
-                    onEachFeature: function (feature, layer) {
-                        layer.bindPopup(precipPopupHTML(feature));
-                    }*/
-                });
+                queryLayer = L.geoJson(latLngBounds);
                 //myMap.addLayer(latLngBounds);
+                loader.toggleClass("hide");
                 myMap.fitBounds(queryLayer.getBounds(), {animate: true, duration: 0.75, easeLinearity: 0.1});
                 //console.log(latLngBounds);
             });
@@ -124,12 +121,17 @@ function queryPrecipitation() {
 
 function nexradListener(){
     var nexRadFlg = false;
+    var nexradLegendDiv = $("#radarLegend");
     $('#toggleNexrad').on('click',function(){
         if(nexRadFlg){
             myMap.removeLayer(nexrad);
+            nexradLegendDiv.html("");
+            nexradLegendDiv.removeClass("wrapper");
             nexRadFlg = false;
         } else {
             nexrad.addTo(myMap).bringToFront();
+            nexradLegendDiv.addClass("wrapper");
+            nexradLegendDiv.html("<span style='font-size:8px'>Radar Legend</span><br><img src='radarlegend.png' width='50' height='220'>");
             nexRadFlg = true;
         }
     });
@@ -137,16 +139,16 @@ function nexradListener(){
 
 nexradListener();
 
-function ask() {
-    var latLng = "[" + prompt("Input Coordinates in Decimal Degrees, Comma-Separated") + "]";
+function inputCoordinates() {
+    var latLng = "[" + prompt("Input Coordinates in Decimal Degrees, Comma-Separated\n\nExample: 39.713863, -95.721921") + "]";
         latLng = JSON.parse(latLng);
         //console.log(latLng.toString());
         if (latLng !== []) {
             myMap.flyTo(latLng, 10);
         }
-
 }
 function changeBasemap(id) {
+    loader.toggleClass("hide");
     myMap.eachLayer(function(layer){
         if(layer instanceof L.esri.BasemapLayer) {
             myMap.removeLayer(layer);
@@ -154,12 +156,13 @@ function changeBasemap(id) {
     });
     var mapType = document.getElementById(id).value;
     if(mapType !== "Select Basemap") {
-        L.esri.basemapLayer(mapType).addTo(myMap);
-        if (mapType !== "Streets" || mapType !== "Topographic" || mapType !== "USATopo" || mapType !== "NationalGeographic") {
+        if (mapType !== "Streets" && mapType !== "Topographic" && mapType !== "USATopo" && mapType !== "NationalGeographic") {
             var labelLayer = mapType + "Labels";
-            L.esri.basemapLayer(labelLayer).addTo(myMap);
+            L.esri.basemapLayer(labelLayer).addTo(myMap).bringToBack();
         }
+        L.esri.basemapLayer(mapType).addTo(myMap).bringToBack();
     }
+    loader.toggleClass("hide");
 }
 
 /*function toggleHrlyPrecip(){
@@ -191,22 +194,25 @@ function droughtListener(){
 droughtListener();
 
 function moveToCurrLoc(){
+    loader.toggleClass("hide");
     try {
         if(latitude !== undefined && longitude !== undefined) {
             var currCoords = [latitude, longitude];
             myMap.flyTo(currCoords, 14);
-            L.popup().setLatLng([currCoords[0] + 0.001, currCoords[1]]).setContent("<span style='font: ;t: 12px Helvetica, sans-serif'>You are here.</span>").openOn(myMap);
+            L.popup().setLatLng([currCoords[0] + 0.001, currCoords[1]]).setContent("You are here.<br>(Click blue circle to clear location.)").openOn(myMap);
             var currMarker = L.circleMarker(currCoords,{
                 style: {color: "#779126", fillOpacity: 0.25},
                 radius: 5
             }).addTo(myMap);
             activateCurrMarkerMonitoring(currMarker);
+            loader.toggleClass("hide");
             return;
         }
         console.log("Geolocation still loading... Try again.");
     } catch(err) {
         window.alert("Geolocation failed with the error: " + err);
     }
+    loader.toggleClass("hide");
 }
 
 function activateCurrMarkerMonitoring(marker) {
@@ -237,6 +243,7 @@ function openNav() {
 
 function closeNav() {
     document.getElementById("mySidenav").style.width = "0";
+    $("#name").toggleClass("hide");
 }
 
 function getColor(qpf) {
@@ -309,6 +316,25 @@ function setForecastOpacity(){
     forecast.setStyle({fillOpacity: document.getElementById("forecastOpacity").value/100.0});
 }
 
+function setRadarOpacity(){
+    nexrad.setOpacity(document.getElementById("radarOpacity").value/100.0);
+}
+
 function setDroughtOpacity(){
     droughtMap.setOpacity(document.getElementById("droughtOpacity").value/100.0);
 }
+
+function clearHTML(id){
+    var element = $("#"+id);
+    element.toggleClass("hide");
+}
+
+function togglePopups(){
+    $(".popup").toggleClass("hide");
+}
+
+function splash(){
+    $("#splash").removeClass("hide");
+}
+
+$("#menu").on('click', function(){$("#name").toggleClass("hide");});

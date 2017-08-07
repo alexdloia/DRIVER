@@ -33,16 +33,16 @@
 .wrapper {
     position: absolute;
     z-index: 400;
-    background: white;
+    background: #eaeaea;
     padding: 10px;
     border-radius: 5px;
-    box-shadow: 4px 4px 2px black;
+    box-shadow: 4px 4px 2px rgba(0, 0, 0, 0.77);
 }
 
 body {
     margin:0;
     padding:0;
-    font: 13px Helvetica, sans-serif;
+    font: 13px 'proxima_nova_ltsemibold', Georgia, sans-serif;
 }
 
 #mapid {
@@ -173,10 +173,11 @@ select#soflow-color {
 
 /* The switch - the box around the slider */
 .switch {
-    position: relative;
+    position: absolute;
     display: inline-block;
-    width: 30px;
-    height: 17px;
+    right:4px;
+    width: 28px;
+    height: 15px;
 }
 
 /* Hide default HTML checkbox */
@@ -198,8 +199,8 @@ select#soflow-color {
 .slider:before {
     position: absolute;
     content: "";
-    height: 13px;
-    width: 13px;
+    height: 11px;
+    width: 11px;
     left: 2px;
     bottom: 2px;
     background-color: white;
@@ -277,6 +278,31 @@ input:checked + .slider:before {
 
 .colorBox {
     width:10px;
-    height:15px;
+    height:16px;
     float: left;
+}
+
+.loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #779126; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    margin:auto;
+    z-index: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.hide {
+    visibility: hidden;
 }
